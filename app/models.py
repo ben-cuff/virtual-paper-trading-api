@@ -25,6 +25,7 @@ class User(Base):
     name = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    balance = Column(DECIMAL(12, 3), default=100000.000)
 
     portfolio = relationship(
         "Portfolio", back_populates="user", cascade="all, delete-orphan"
