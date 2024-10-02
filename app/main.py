@@ -94,6 +94,25 @@ def create_user(user: UserCreate, db: db_dependency):
     return user_dict
 
 
+@app.get("/portfolio/{user_id}/")
+def get_portfolio(user_id: int, db: db_dependency):
+    user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="404 Not Found: User not found")
+    
+    portfolio = db.query(models.Portfolio).filter(models.Portfolio.user_id == user_id).all()
+    portfolio_list = [
+        {
+            "stock_symbol": item.ticker_symbol,
+            "shares_owned": float(item.shares_owned),
+            "average_price": float(item.average_price),
+        }
+        for item in portfolio
+    ]
+
+    return portfolio_list
+
+
 @app.post("/buy/{user_id}/")
 def buy_stock(user_id: int, request: BuyStockRequest, db: db_dependency):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
