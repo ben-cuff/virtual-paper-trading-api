@@ -5,6 +5,10 @@ import models
 from database import engine, SessionLocal
 from sqlalchemy.orm import Session
 from typing import Annotated
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
 app = FastAPI()
 
@@ -41,5 +45,11 @@ def create_user(user: UserCreate, db: db_dependency):
 
     if existing_user:
         raise HTTPException(status_code=404, detail="user already exists")
-    
-    new_user = models.User(name=user.name, email=user.email, hashed_password=user.password)
+    hashed_password = pwd_context.hash(user.password)
+    new_user = models.User(
+        name=user.name, email=user.email, hashed_password=hashed_password
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
