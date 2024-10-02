@@ -171,6 +171,7 @@ def buy_stock(user_id: int, request: StockRequest, db: db_dependency):
         "stock_symbol": request.stock_symbol,
         "quantity": request.quantity,
         "total_cost": float(total_cost),
+        "balance": user.balance,
     }
 
 
@@ -216,4 +217,5 @@ def sell_stock(user_id: int, request: StockRequest, db: db_dependency):
         "stock_symbol": request.stock_symbol,
         "quantity": request.quantity,
         "total_return": float(total_return),
+        "balance": user.balance,
     }
