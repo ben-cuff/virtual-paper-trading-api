@@ -30,7 +30,7 @@ class UserResponse(BaseModel):
         orm_mode = True
 
 
-class BuyStockRequest(BaseModel):
+class StockRequest(BaseModel):
     stock_symbol: str
     quantity: float
     price_per_share: float
@@ -99,8 +99,10 @@ def get_portfolio(user_id: int, db: db_dependency):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="404 Not Found: User not found")
-    
-    portfolio = db.query(models.Portfolio).filter(models.Portfolio.user_id == user_id).all()
+
+    portfolio = (
+        db.query(models.Portfolio).filter(models.Portfolio.user_id == user_id).all()
+    )
     portfolio_list = [
         {
             "stock_symbol": item.ticker_symbol,
@@ -110,11 +112,18 @@ def get_portfolio(user_id: int, db: db_dependency):
         for item in portfolio
     ]
 
-    return portfolio_list
+    user_dict = {
+        "id": user.user_id,
+        "name": user.name,
+        "email": user.email,
+        "balance": user.balance,
+    }
+
+    return {"user": user_dict, "portfolio": portfolio_list}
 
 
 @app.post("/buy/{user_id}/")
-def buy_stock(user_id: int, request: BuyStockRequest, db: db_dependency):
+def buy_stock(user_id: int, request: StockRequest, db: db_dependency):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="404 Not Found: User not found")
@@ -162,4 +171,49 @@ def buy_stock(user_id: int, request: BuyStockRequest, db: db_dependency):
         "stock_symbol": request.stock_symbol,
         "quantity": request.quantity,
         "total_cost": float(total_cost),
+    }
+
+
+@app.post("/sell/{user_id}")
+def sell_stock(user_id: int, request: StockRequest, db: db_dependency):
+    user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="404 Not Found: User not found")
+
+    total_return = Decimal(request.quantity) * Decimal(request.price_per_share)
+
+    portfolio_item = (
+        db.query(models.Portfolio)
+        .filter(
+            models.Portfolio.user_id == user.user_id,
+            models.Portfolio.ticker_symbol == request.stock_symbol,
+        )
+        .first()
+    )
+
+    if not portfolio_item:
+        raise HTTPException(status_code=404, detail="404 Not Found: Portfolio item not found")
+
+    if(request.quantity > portfolio_item.shares_owned):
+        raise HTTPException(
+            status_code=400, detail="400 Bad Request: Insufficient shares"
+        )
+    
+    user.balance += total_return
+
+    portfolio_item.shares_owned -= Decimal(request.quantity)
+
+    if portfolio_item.shares_owned == 0:
+        db.delete(portfolio_item)
+    else:
+        db.add(portfolio_item)
+
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "user_id": user_id,
+        "stock_symbol": request.stock_symbol,
+        "quantity": request.quantity,
+        "total_return": float(total_return),
     }
