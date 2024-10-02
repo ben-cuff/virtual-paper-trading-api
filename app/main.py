@@ -29,6 +29,13 @@ class UserResponse(BaseModel):
         orm_mode = True
 
 
+class BuyStockRequest(BaseModel):
+    user_id: int
+    stock_symbol: str
+    quantity: float
+    price_per_share: float
+
+
 def get_db():
     db = SessionLocal()
     try:
@@ -50,7 +57,7 @@ def get_user(user_id: int, db: db_dependency):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="404 Not Found: User not found")
-    
+
     user_dict = {"id": user.user_id, "name": user.name, "email": user.email}
 
     return user_dict
@@ -73,4 +80,5 @@ def create_user(user: UserCreate, db: db_dependency):
     db.commit()
     db.refresh(new_user)
 
-    return new_user
+    user_dict = {"id": new_user.user_id, "name": new_user.name, "email": new_user.email}
+    return user_dict
