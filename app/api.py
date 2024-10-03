@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 load_dotenv(dotenv_path=".env.local")
 
 API_KEY = os.getenv("X-API-KEY")
+DEV_MODE = os.getenv("DEV_MODE").lower() == "true"
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -45,7 +46,9 @@ def get_db():
 db_dependency = Annotated[Session, Depends(get_db)]
 
 
-def verify_api_key(x_api_key: str = Header(...)):
+def verify_api_key(x_api_key: str = Header(None)):
+    if DEV_MODE:
+        return
     if x_api_key != API_KEY:
         raise HTTPException(status_code=403, detail="Forbidden: Invalid API Key")
 
