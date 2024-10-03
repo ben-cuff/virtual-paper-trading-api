@@ -82,6 +82,7 @@ class ResetResponse(BaseModel):
 class LoginResponse(BaseModel):
     message: str
     success: bool
+    user: UserResponse
 
     class Config:
         from_attributes = True

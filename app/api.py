@@ -133,9 +133,16 @@ def login(userAttempt: LoginRequest, db: db_dependency):
         return response_models.LoginResponse(
             message="Email or password incorrect", success=False
         )
+    
+    user_dict = response_models.UserResponse(
+        id=user.user_id,
+        name=user.name,
+        email=user.email,
+        balance=user.balance,
+    )
 
     return response_models.LoginResponse(
-        message="User successfully logged in", success=True
+        message="User successfully logged in", success=True, user=user_dict
     )
 
 
