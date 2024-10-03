@@ -5,6 +5,20 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 
+class Transaction(Base):
+    __tablename__ = "transaction"
+
+    transaction_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.user_id"))
+    ticker_symbol = Column(String(10))
+    shares_quantity = Column(DECIMAL(10, 2))
+    price = Column(DECIMAL(10, 2))
+    transaction_type = Column(String(4))
+    time = Column(TIMESTAMP, server_default=func.now())
+
+    user = relationship("User", back_populates="transactions")
+
+
 class Portfolio(Base):
     __tablename__ = "portfolio"
 
@@ -29,4 +43,8 @@ class User(Base):
 
     portfolio = relationship(
         "Portfolio", back_populates="user", cascade="all, delete-orphan"
+    )
+
+    transaction = relationship(
+        "Transaction", back_populates="user", cascade="all, delete-orphan"
     )
