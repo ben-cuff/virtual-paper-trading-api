@@ -270,3 +270,26 @@ def sell_stock(user_id: int, request: StockRequest, db: db_dependency):
         "total_return": float(total_return),
         "balance": user.balance,
     }
+
+
+@app.delete("/reset/{user_id}")
+def reset_user(user_id: int, db: db_dependency):
+    user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="404 Not Found: User not found")
+
+    db.query(models.Portfolio).filter(models.Portfolio.user_id == user_id).delete()
+    db.query(models.Transaction).filter(models.Transaction.user_id == user_id).delete()
+
+    user.balance = 100000.00
+    db.add(user)
+
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "message": "User reset successfully",
+        "user_id": user_id,
+        "name": user.name,
+        "email": user.email,
+    }
