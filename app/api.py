@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request, Header
 from starlette.responses import RedirectResponse
 from pydantic import BaseModel
 import app.models as models
@@ -7,6 +7,13 @@ from sqlalchemy.orm import Session
 from typing import Annotated
 from passlib.context import CryptContext
 from decimal import Decimal
+import os
+from dotenv import load_dotenv
+
+load_dotenv(dotenv_path=".env.local")
+
+API_KEY = os.getenv("X-API-KEY")
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -47,12 +54,20 @@ def get_db():
 db_dependency = Annotated[Session, Depends(get_db)]
 
 
+def verify_api_key(x_api_key: str = Header(...)):
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=403, detail="Forbidden: Invalid API Key")
+
+
+api_key_dependency = Depends(verify_api_key)
+
+
 @app.get("/")
 def read_root():
     return RedirectResponse("https://www.virtualpapertrading.com")
 
 
-@app.get("/users/{user_id}/")
+@app.get("/users/{user_id}/", dependencies=[api_key_dependency])
 def get_user(user_id: int, db: db_dependency):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
@@ -68,7 +83,7 @@ def get_user(user_id: int, db: db_dependency):
     return user_dict
 
 
-@app.post("/users/", response_model=UserResponse)
+@app.post("/users/", response_model=UserResponse, dependencies=[api_key_dependency])
 def create_user(user: UserCreate, db: db_dependency):
     existing_user = (
         db.query(models.User).filter(models.User.email == user.email).first()
@@ -94,8 +109,8 @@ def create_user(user: UserCreate, db: db_dependency):
     return user_dict
 
 
-@app.get("/portfolio/{user_id}/")
-def get_portfolio(user_id: int, db: db_dependency):
+@app.get("/portfolio/{user_id}/", dependencies=[api_key_dependency])
+def get_portfolio(user_id: int, db: db_dependency, dependencies=[api_key_dependency]):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="404 Not Found: User not found")
@@ -122,7 +137,7 @@ def get_portfolio(user_id: int, db: db_dependency):
     return {"user": user_dict, "portfolio": portfolio_list}
 
 
-@app.get("/transactions/{user_id}")
+@app.get("/transactions/{user_id}", dependencies=[api_key_dependency])
 def get_transactions(user_id: int, db: db_dependency):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
@@ -153,7 +168,7 @@ def get_transactions(user_id: int, db: db_dependency):
     return {"user": user_dict, "transactions": transactions_list}
 
 
-@app.post("/buy/{user_id}/")
+@app.post("/buy/{user_id}/", dependencies=[api_key_dependency])
 def buy_stock(user_id: int, request: StockRequest, db: db_dependency):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
@@ -215,7 +230,7 @@ def buy_stock(user_id: int, request: StockRequest, db: db_dependency):
     }
 
 
-@app.post("/sell/{user_id}")
+@app.post("/sell/{user_id}", dependencies=[api_key_dependency])
 def sell_stock(user_id: int, request: StockRequest, db: db_dependency):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
@@ -272,7 +287,7 @@ def sell_stock(user_id: int, request: StockRequest, db: db_dependency):
     }
 
 
-@app.delete("/reset/{user_id}")
+@app.delete("/reset/{user_id}", dependencies=[api_key_dependency])
 def reset_user(user_id: int, db: db_dependency):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
