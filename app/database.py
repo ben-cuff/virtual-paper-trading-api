@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=".env.local")
 
-URL_DATABASE = os.getenv("DATABASE_URL")
+URL_DATABASE = os.getenv("POSTGRES_URL")
 
 if not URL_DATABASE:
     raise ValueError("No DATABASE_URL environment variable set")
