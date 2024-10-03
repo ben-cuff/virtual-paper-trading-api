@@ -35,6 +35,11 @@ class StockRequest(BaseModel):
     price_per_share: float
 
 
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
 def get_db():
     db = SessionLocal()
     try:
@@ -112,12 +117,34 @@ def create_user(user: UserCreateRequest, db: db_dependency):
     return user_dict
 
 
+@app.post(
+    "/login/",
+    response_model=response_models.LoginResponse,
+    dependencies=[api_key_dependency],
+)
+def login(userAttempt: LoginRequest, db: db_dependency):
+    user = db.query(models.User).filter(models.User.email == userAttempt.email).first()
+    if not user:
+        return response_models.LoginResponse(
+            message="Email not registered", success=False
+        )
+
+    if not pwd_context.verify(userAttempt.password, user.hashed_password):
+        return response_models.LoginResponse(
+            message="Incorrect password", success=False
+        )
+
+    return response_models.LoginResponse(
+        message="User successfully logged in", success=True
+    )
+
+
 @app.get(
     "/portfolio/{user_id}/",
     response_model=response_models.PortfolioResponse,
     dependencies=[api_key_dependency],
 )
-def get_portfolio(user_id: int, db: db_dependency, dependencies=[api_key_dependency]):
+def get_portfolio(user_id: int, db: db_dependency):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="404 Not Found: User not found")

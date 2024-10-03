@@ -77,3 +77,11 @@ class ResetResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class LoginResponse(BaseModel):
+    message: str
+    success: bool
+
+    class Config:
+        from_attributes = True
