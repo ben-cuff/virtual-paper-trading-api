@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends
 from starlette.responses import RedirectResponse
 from pydantic import BaseModel
-import models
+from . import models
 from database import engine, SessionLocal
 from sqlalchemy.orm import Session
 from typing import Annotated
