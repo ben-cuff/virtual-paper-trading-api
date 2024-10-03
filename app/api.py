@@ -3,6 +3,7 @@ from starlette.responses import RedirectResponse
 from pydantic import BaseModel
 import app.models as models
 from app.database import engine, SessionLocal
+import app.response_models as response_models
 from sqlalchemy.orm import Session
 from typing import Annotated
 from passlib.context import CryptContext
@@ -13,7 +14,6 @@ from dotenv import load_dotenv
 load_dotenv(dotenv_path=".env.local")
 
 API_KEY = os.getenv("X-API-KEY")
-
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -26,15 +26,6 @@ class UserCreate(BaseModel):
     name: str
     email: str
     password: str
-
-
-class UserResponse(BaseModel):
-    id: int
-    name: str
-    email: str
-
-    class Config:
-        orm_mode = True
 
 
 class StockRequest(BaseModel):
@@ -67,23 +58,31 @@ def read_root():
     return RedirectResponse("https://www.virtualpapertrading.com")
 
 
-@app.get("/users/{user_id}/", dependencies=[api_key_dependency])
+@app.get(
+    "/users/{user_id}/",
+    response_model=response_models.UserResponse,
+    dependencies=[api_key_dependency],
+)
 def get_user(user_id: int, db: db_dependency):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="404 Not Found: User not found")
 
-    user_dict = {
-        "id": user.user_id,
-        "name": user.name,
-        "email": user.email,
-        "balance": user.balance,
-    }
+    user_dict = response_models.UserResponse(
+        id=user.user_id,
+        name=user.name,
+        email=user.email,
+        balance=user.balance,
+    )
 
     return user_dict
 
 
-@app.post("/users/", response_model=UserResponse, dependencies=[api_key_dependency])
+@app.post(
+    "/users/",
+    response_model=response_models.UserResponse,
+    dependencies=[api_key_dependency],
+)
 def create_user(user: UserCreate, db: db_dependency):
     existing_user = (
         db.query(models.User).filter(models.User.email == user.email).first()
@@ -100,16 +99,21 @@ def create_user(user: UserCreate, db: db_dependency):
     db.commit()
     db.refresh(new_user)
 
-    user_dict = {
-        "id": new_user.user_id,
-        "name": new_user.name,
-        "email": new_user.email,
-        "balance": new_user.balance,
-    }
+    user_dict = response_models.UserResponse(
+        id=new_user.user_id,
+        name=new_user.name,
+        email=new_user.email,
+        balance=new_user.balance,
+    )
+
     return user_dict
 
 
-@app.get("/portfolio/{user_id}/", dependencies=[api_key_dependency])
+@app.get(
+    "/portfolio/{user_id}/",
+    response_model=response_models.PortfolioResponse,
+    dependencies=[api_key_dependency],
+)
 def get_portfolio(user_id: int, db: db_dependency, dependencies=[api_key_dependency]):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
@@ -118,26 +122,30 @@ def get_portfolio(user_id: int, db: db_dependency, dependencies=[api_key_depende
     portfolio = (
         db.query(models.Portfolio).filter(models.Portfolio.user_id == user_id).all()
     )
+
     portfolio_list = [
-        {
-            "stock_symbol": item.ticker_symbol,
-            "shares_owned": float(item.shares_owned),
-            "average_price": float(item.average_price),
-        }
+        response_models.PortfolioResponse(
+            stock_symbol=item.ticker_symbol,
+            shares_owned=float(item.shares_owned),
+            average_price=float(item.average_price),
+        )
         for item in portfolio
     ]
 
-    user_dict = {
-        "id": user.user_id,
-        "name": user.name,
-        "email": user.email,
-        "balance": user.balance,
-    }
+    user_dict = response_models.UserResponse(
+        id=user.user_id, name=user.name, email=user.email, balance=user.balance
+    )
 
-    return {"user": user_dict, "portfolio": portfolio_list}
+    return response_models.UserPortfolioResponse(
+        user=user_dict, portfolio=portfolio_list
+    )
 
 
-@app.get("/transactions/{user_id}", dependencies=[api_key_dependency])
+@app.get(
+    "/transactions/{user_id}",
+    response_model=response_models.UserTransactionsResponse,
+    dependencies=[api_key_dependency],
+)
 def get_transactions(user_id: int, db: db_dependency):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
@@ -148,27 +156,30 @@ def get_transactions(user_id: int, db: db_dependency):
     )
 
     transactions_list = [
-        {
-            "stock_symbol": item.ticker_symbol,
-            "transaction type": item.transaction_type,
-            "shares_quantity": float(item.shares_quantity),
-            "price": float(item.price),
-            "time": item.time,
-        }
+        response_models.TransactionResponse(
+            stock_symbol=item.ticker_symbol,
+            transaction_type=item.transaction_type,
+            shares_quantity=float(item.shares_owned),
+            price=float(item.price),
+            time=item.time,
+        )
         for item in transactions
     ]
 
-    user_dict = {
-        "id": user.user_id,
-        "name": user.name,
-        "email": user.email,
-        "balance": user.balance,
-    }
+    user_dict = response_models.UserResponse(
+        id=user.user_id, name=user.name, email=user.email, balance=user.balance
+    )
 
-    return {"user": user_dict, "transactions": transactions_list}
+    return response_models.UserTransactionsResponse(
+        user=user_dict, transactions=transactions_list
+    )
 
 
-@app.post("/buy/{user_id}/", dependencies=[api_key_dependency])
+@app.post(
+    "/buy/{user_id}/",
+    response_model=response_models.BuyResponse,
+    dependencies=[api_key_dependency],
+)
 def buy_stock(user_id: int, request: StockRequest, db: db_dependency):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
@@ -221,16 +232,20 @@ def buy_stock(user_id: int, request: StockRequest, db: db_dependency):
     db.refresh(user)
     db.refresh(portfolio_item)
 
-    return {
-        "user_id": user_id,
-        "stock_symbol": request.stock_symbol,
-        "quantity": request.quantity,
-        "total_cost": float(total_cost),
-        "balance": user.balance,
-    }
+    return response_models.BuyResponse(
+        user_id=user_id,
+        stock_symbol=request.stock_symbol,
+        quantity=request.quantity,
+        total_cost=float(total_cost),
+        balance=user.balance,
+    )
 
 
-@app.post("/sell/{user_id}", dependencies=[api_key_dependency])
+@app.post(
+    "/sell/{user_id}",
+    response_model=response_models.SellResponse,
+    dependencies=[api_key_dependency],
+)
 def sell_stock(user_id: int, request: StockRequest, db: db_dependency):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
@@ -278,16 +293,20 @@ def sell_stock(user_id: int, request: StockRequest, db: db_dependency):
     db.commit()
     db.refresh(user)
 
-    return {
-        "user_id": user_id,
-        "stock_symbol": request.stock_symbol,
-        "quantity": request.quantity,
-        "total_return": float(total_return),
-        "balance": user.balance,
-    }
+    return response_models.SellResponse(
+        user_id=user_id,
+        stock_symbol=request.stock_symbol,
+        quantity=request.quantity,
+        total_return=float(total_return),
+        balance=user.balance,
+    )
 
 
-@app.delete("/reset/{user_id}", dependencies=[api_key_dependency])
+@app.delete(
+    "/reset/{user_id}",
+    response_model=response_models.ResetResponse,
+    dependencies=[api_key_dependency],
+)
 def reset_user(user_id: int, db: db_dependency):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
@@ -302,9 +321,9 @@ def reset_user(user_id: int, db: db_dependency):
     db.commit()
     db.refresh(user)
 
-    return {
-        "message": "User reset successfully",
-        "user_id": user_id,
-        "name": user.name,
-        "email": user.email,
-    }
+    return response_models.ResetResponse(
+        message="User reset successfully",
+        user_id=user_id,
+        name=user.name,
+        email=user.email,
+    )
