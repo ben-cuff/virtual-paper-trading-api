@@ -22,7 +22,7 @@ app = FastAPI()
 models.Base.metadata.create_all(bind=engine)
 
 
-class UserCreate(BaseModel):
+class UserCreateRequest(BaseModel):
     name: str
     email: str
     password: str
@@ -83,7 +83,7 @@ def get_user(user_id: int, db: db_dependency):
     response_model=response_models.UserResponse,
     dependencies=[api_key_dependency],
 )
-def create_user(user: UserCreate, db: db_dependency):
+def create_user(user: UserCreateRequest, db: db_dependency):
     existing_user = (
         db.query(models.User).filter(models.User.email == user.email).first()
     )
