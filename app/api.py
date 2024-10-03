@@ -126,12 +126,12 @@ def login(userAttempt: LoginRequest, db: db_dependency):
     user = db.query(models.User).filter(models.User.email == userAttempt.email).first()
     if not user:
         return response_models.LoginResponse(
-            message="Email not registered", success=False
+            message="Email or password incorrect", success=False
         )
 
     if not pwd_context.verify(userAttempt.password, user.hashed_password):
         return response_models.LoginResponse(
-            message="Incorrect password", success=False
+            message="Email or password incorrect", success=False
         )
 
     return response_models.LoginResponse(
