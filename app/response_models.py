@@ -11,6 +11,15 @@ class UserResponse(BaseModel):
         orm_mode = True
 
 
+class LoginResponse(BaseModel):
+    message: str
+    success: bool
+    user: UserResponse
+
+    class Config:
+        from_attributes = True
+
+
 class PortfolioResponse(BaseModel):
     stock_symbol: str
     shares_owned: float
@@ -77,12 +86,3 @@ class ResetResponse(BaseModel):
 
     class Config:
         orm_mode = True
-
-
-class LoginResponse(BaseModel):
-    message: str
-    success: bool
-    user: UserResponse
-
-    class Config:
-        from_attributes = True
