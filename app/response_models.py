@@ -25,13 +25,10 @@ class PortfolioResponse(BaseModel):
     shares_owned: float
     average_price: float
 
-    class Config:
-        orm_mode = True
-
 
 class UserPortfolioResponse(BaseModel):
     user: UserResponse
-    transactions: list[PortfolioResponse]
+    portfolio: list[PortfolioResponse]
 
     class Config:
         orm_mode = True

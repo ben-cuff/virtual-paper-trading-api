@@ -26,7 +26,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"], 
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -159,7 +159,7 @@ def login(userAttempt: LoginRequest, db: db_dependency):
 
 @app.get(
     "/portfolio/{user_id}/",
-    response_model=response_models.PortfolioResponse,
+    response_model=response_models.UserPortfolioResponse,
     dependencies=[api_key_dependency],
 )
 def get_portfolio(user_id: int, db: db_dependency):
