@@ -261,7 +261,7 @@ def buy_stock(user_id: int, request: StockRequest, db: db_dependency):
     else:
         portfolio_item = models.Portfolio(
             user_id=user_id,
-            ticker_symbol=request.stock_symbol,
+            ticker_symbol=request.stock_symbol.upper(),
             shares_owned=Decimal(request.quantity),
             average_price=Decimal(request.price_per_share),
         )
@@ -269,7 +269,7 @@ def buy_stock(user_id: int, request: StockRequest, db: db_dependency):
 
     transaction = models.Transaction(
         user_id=user_id,
-        ticker_symbol=request.stock_symbol,
+        ticker_symbol=request.stock_symbol.upper(),
         shares_quantity=Decimal(request.quantity),
         price=Decimal(request.price_per_share),
         transaction_type="buy",
@@ -282,7 +282,7 @@ def buy_stock(user_id: int, request: StockRequest, db: db_dependency):
 
     return response_models.BuyResponse(
         user_id=user_id,
-        stock_symbol=request.stock_symbol,
+        stock_symbol=request.stock_symbol.upper(),
         quantity=request.quantity,
         total_cost=float(total_cost),
         balance=user.balance,
@@ -305,7 +305,7 @@ def sell_stock(user_id: int, request: StockRequest, db: db_dependency):
         db.query(models.Portfolio)
         .filter(
             models.Portfolio.user_id == user.user_id,
-            models.Portfolio.ticker_symbol == request.stock_symbol,
+            models.Portfolio.ticker_symbol == request.stock_symbol.upper(),
         )
         .first()
     )
@@ -331,7 +331,7 @@ def sell_stock(user_id: int, request: StockRequest, db: db_dependency):
 
     transaction = models.Transaction(
         user_id=user_id,
-        ticker_symbol=request.stock_symbol,
+        ticker_symbol=request.stock_symbol.upper(),
         shares_quantity=Decimal(request.quantity),
         price=Decimal(request.price_per_share),
         transaction_type="sell",
@@ -343,7 +343,7 @@ def sell_stock(user_id: int, request: StockRequest, db: db_dependency):
 
     return response_models.SellResponse(
         user_id=user_id,
-        stock_symbol=request.stock_symbol,
+        stock_symbol=request.stock_symbol.upper(),
         quantity=request.quantity,
         total_return=float(total_return),
         balance=user.balance,
