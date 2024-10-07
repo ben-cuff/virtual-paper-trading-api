@@ -50,6 +50,9 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
+class LeaderboardRequest(BaseModel):
+    
+
 
 def get_db():
     db = SessionLocal()
