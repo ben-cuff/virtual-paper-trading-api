@@ -50,8 +50,9 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
+
 class LeaderboardRequest(BaseModel):
-    
+    total_worth: float
 
 
 def get_db():
@@ -377,4 +378,34 @@ def reset_user(user_id: int, db: db_dependency):
         user_id=user_id,
         name=user.name,
         email=user.email,
+    )
+
+
+@app.post(
+    "/leaderboard/{user_id}",
+    response_model=response_models.LeaderboardResponse,
+    dependencies=[api_key_dependency],
+)
+def updateLeaderboard(user_id: int, request: LeaderboardRequest, db: db_dependency):
+    user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="404 Not Found: User not found")
+
+    user_leaderboard = db.query(models.Leaderboard).filter(
+        models.Leaderboard.user_id == user_id
+    )
+
+    if user_leaderboard:
+        user_leaderboard.total_worth = request.total_worth
+    else:
+        new_leaderboard = models.Leaderboard(
+            user_id=user_id, name=user.name, total_worth=request.total_worth
+        )
+        db.add(new_leaderboard)
+
+    db.commit()
+    db.refresh(user_leaderboard)
+
+    return response_models.LeaderboardResponse(
+        name=user.name, total_worth=request.total_worth
     )

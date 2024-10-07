@@ -55,9 +55,6 @@ class Leaderboard(Base):
     leaderboard_id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("user.user_id"))
     name = Column(String(10))
-    rank = Column(Integer)
     total_worth = Column(DECIMAL(12, 3))
-
-    __mapper_args__ = {"order_by": total_worth.desc()}
 
     user = relationship("User", back_populates="leaderboard")

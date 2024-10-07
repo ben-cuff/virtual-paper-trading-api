@@ -83,3 +83,8 @@ class ResetResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class LeaderboardResponse(BaseModel):
+    name: str
+    total_worth: float
