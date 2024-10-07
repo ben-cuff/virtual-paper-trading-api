@@ -17,8 +17,13 @@ class User(Base):
     portfolio = relationship(
         "Portfolio", back_populates="user", cascade="all, delete-orphan"
     )
+    
     transactions = relationship(
         "Transaction", back_populates="user", cascade="all, delete-orphan"
+    )
+
+    leaderboard = relationship(
+        "Leaderboard", back_populates="user", cascade="all, delete-orphan"
     )
 
 

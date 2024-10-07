@@ -386,7 +386,7 @@ def reset_user(user_id: int, db: db_dependency):
     response_model=response_models.LeaderboardResponse,
     dependencies=[api_key_dependency],
 )
-def getLeaderBoard(db: db_dependency):
+def get_leaderBoard(db: db_dependency):
     leaderboard_entries = (
         db.query(models.Leaderboard)
         .order_by(models.Leaderboard.total_worth.desc())
@@ -409,7 +409,7 @@ def getLeaderBoard(db: db_dependency):
     response_model=response_models.LeaderboardAdditionResponse,
     dependencies=[api_key_dependency],
 )
-def updateLeaderboard(user_id: int, request: LeaderboardRequest, db: db_dependency):
+def update_leaderboard(user_id: int, request: LeaderboardRequest, db: db_dependency):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="404 Not Found: User not found")
