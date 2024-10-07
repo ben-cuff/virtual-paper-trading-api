@@ -46,4 +46,18 @@ class Transaction(Base):
     price = Column(DECIMAL(12, 3))
     time = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
 
-    user = relationship("User", back_populates="transactions")
+    user = relationship("User", back_populates="transaction")
+
+
+class Leaderboard(Base):
+    __tablename__ = "leaderboard"
+
+    leaderboard_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.user_id"))
+    name = Column(String(10))
+    rank = Column(Integer)
+    total_worth = Column(DECIMAL(12, 3))
+
+    __mapper_args__ = {"order_by": total_worth.desc()}
+
+    user = relationship("User", back_populates="leaderboard")
