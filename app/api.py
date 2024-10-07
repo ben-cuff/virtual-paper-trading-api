@@ -381,9 +381,32 @@ def reset_user(user_id: int, db: db_dependency):
     )
 
 
+@app.get(
+    "/leaderboard",
+    response_model=response_models.LeaderboardResponse,
+    dependencies=[api_key_dependency],
+)
+def getLeaderBoard(db: db_dependency):
+    leaderboard_entries = (
+        db.query(models.Leaderboard)
+        .order_by(models.Leaderboard.total_worth.desc())
+        .all()
+    )
+
+    leaderboard_list = [
+        response_models.LeaderboardAdditionResponse(
+            name=item.name,
+            total_worth=item.total_worth
+        )
+        for item in leaderboard_entries
+    ]
+
+    return response_models.LeaderboardResponse(leaderboard=leaderboard_list)
+
+
 @app.post(
     "/leaderboard/{user_id}",
-    response_model=response_models.LeaderboardResponse,
+    response_model=response_models.LeaderboardAdditionResponse,
     dependencies=[api_key_dependency],
 )
 def updateLeaderboard(user_id: int, request: LeaderboardRequest, db: db_dependency):
@@ -406,6 +429,6 @@ def updateLeaderboard(user_id: int, request: LeaderboardRequest, db: db_dependen
     db.commit()
     db.refresh(user_leaderboard)
 
-    return response_models.LeaderboardResponse(
+    return response_models.LeaderboardAdditionResponse(
         name=user.name, total_worth=request.total_worth
     )

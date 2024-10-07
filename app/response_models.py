@@ -85,6 +85,10 @@ class ResetResponse(BaseModel):
         orm_mode = True
 
 
-class LeaderboardResponse(BaseModel):
+class LeaderboardAdditionResponse(BaseModel):
     name: str
     total_worth: float
+
+
+class LeaderboardResponse(BaseModel):
+    leaderboard: list[LeaderboardAdditionResponse]
