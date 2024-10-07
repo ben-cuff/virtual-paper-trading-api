@@ -17,8 +17,8 @@ class User(Base):
     portfolio = relationship(
         "Portfolio", back_populates="user", cascade="all, delete-orphan"
     )
-    
-    transactions = relationship(
+
+    transaction = relationship(
         "Transaction", back_populates="user", cascade="all, delete-orphan"
     )
 
