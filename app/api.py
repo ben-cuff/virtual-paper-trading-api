@@ -395,8 +395,7 @@ def get_leaderBoard(db: db_dependency):
 
     leaderboard_list = [
         response_models.LeaderboardAdditionResponse(
-            name=item.name,
-            total_worth=item.total_worth
+            name=item.name, total_worth=item.total_worth
         )
         for item in leaderboard_entries
     ]
@@ -414,21 +413,26 @@ def update_leaderboard(user_id: int, request: LeaderboardRequest, db: db_depende
     if not user:
         raise HTTPException(status_code=404, detail="404 Not Found: User not found")
 
-    user_leaderboard = db.query(models.Leaderboard).filter(
-        models.Leaderboard.user_id == user_id
+    user_leaderboard = (
+        db.query(models.Leaderboard)
+        .filter(models.Leaderboard.user_id == user_id)
+        .first()
     )
 
     if user_leaderboard:
         user_leaderboard.total_worth = request.total_worth
+        db.commit()
+        db.refresh(user_leaderboard)
+        return response_models.LeaderboardAdditionResponse(
+            name=user.name, total_worth=user_leaderboard.total_worth
+        )
     else:
         new_leaderboard = models.Leaderboard(
             user_id=user_id, name=user.name, total_worth=request.total_worth
         )
         db.add(new_leaderboard)
-
-    db.commit()
-    db.refresh(user_leaderboard)
-
-    return response_models.LeaderboardAdditionResponse(
-        name=user.name, total_worth=request.total_worth
-    )
+        db.commit()
+        db.refresh(new_leaderboard)
+        return response_models.LeaderboardAdditionResponse(
+            name=user.name, total_worth=new_leaderboard.total_worth
+        )
