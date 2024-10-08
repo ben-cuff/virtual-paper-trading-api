@@ -7,7 +7,6 @@ fastapi==0.115.0
 greenlet==3.1.1
 h11==0.14.0
 idna==3.10
-mangum==0.19.0
 passlib==1.7.4
 psycopg2-binary==2.9.9
 pydantic==2.9.2
