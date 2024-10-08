@@ -59,7 +59,7 @@ class Leaderboard(Base):
 
     leaderboard_id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("user.user_id"))
-    name = Column(String(10))
+    name = Column(String(100))
     total_worth = Column(DECIMAL(12, 3))
 
     user = relationship("User", back_populates="leaderboard")
