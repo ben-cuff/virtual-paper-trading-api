@@ -11,6 +11,10 @@ POSTGRES_DATABASE = os.getenv("POSTGRES_URL")
 if not POSTGRES_DATABASE:
     raise ValueError("No POSTGRES_DATABASE environment variable set")
 
-engine = create_engine(POSTGRES_DATABASE)
+try:
+    engine = create_engine(POSTGRES_DATABASE)
+except Exception as e:
+    raise RuntimeError(f"Failed to connect to the database: {str(e)}")
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
