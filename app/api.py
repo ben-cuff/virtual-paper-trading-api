@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv(dotenv_path=".env.local")
 
-API_KEY = os.getenv("X-API-KEY")
+API_KEY = os.getenv("X_API_KEY")
 DEV_MODE = os.getenv("DEV_MODE").lower() == "true"
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -421,10 +421,10 @@ def update_leaderboard(user_id: int, request: LeaderboardRequest, db: db_depende
 
     if user_leaderboard:
         user_leaderboard.total_worth = request.total_worth
-        
+
         db.commit()
         db.refresh(user_leaderboard)
-        
+
         return response_models.LeaderboardAdditionResponse(
             name=user.name, total_worth=user_leaderboard.total_worth
         )
