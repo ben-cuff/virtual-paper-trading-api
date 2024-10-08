@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "app/api.py",
+      "src": "/app/api.py",
       "use": "@now/python"
     }
   ],
