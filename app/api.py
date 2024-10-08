@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, Request, Header
+from fastapi import FastAPI, HTTPException, Depends, Header
 from starlette.responses import RedirectResponse
 from pydantic import BaseModel
 import app.models as models
@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv(dotenv_path=".env.local")
 
-API_KEY = os.getenv("X-API-KEY")
+API_KEY = os.getenv("X_API_KEY")
 DEV_MODE = os.getenv("DEV_MODE").lower() == "true"
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -26,7 +26,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"], 
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -49,6 +49,10 @@ class StockRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+
+class LeaderboardRequest(BaseModel):
+    total_worth: float
 
 
 def get_db():
@@ -74,7 +78,7 @@ api_key_dependency = Depends(verify_api_key)
 
 @app.get("/")
 def read_root():
-    return RedirectResponse("https://www.virtualpapertrading.com")
+    return RedirectResponse(url="/docs")
 
 
 @app.get(
@@ -159,7 +163,7 @@ def login(userAttempt: LoginRequest, db: db_dependency):
 
 @app.get(
     "/portfolio/{user_id}/",
-    response_model=response_models.PortfolioResponse,
+    response_model=response_models.UserPortfolioResponse,
     dependencies=[api_key_dependency],
 )
 def get_portfolio(user_id: int, db: db_dependency):
@@ -261,7 +265,7 @@ def buy_stock(user_id: int, request: StockRequest, db: db_dependency):
     else:
         portfolio_item = models.Portfolio(
             user_id=user_id,
-            ticker_symbol=request.stock_symbol,
+            ticker_symbol=request.stock_symbol.upper(),
             shares_owned=Decimal(request.quantity),
             average_price=Decimal(request.price_per_share),
         )
@@ -269,7 +273,7 @@ def buy_stock(user_id: int, request: StockRequest, db: db_dependency):
 
     transaction = models.Transaction(
         user_id=user_id,
-        ticker_symbol=request.stock_symbol,
+        ticker_symbol=request.stock_symbol.upper(),
         shares_quantity=Decimal(request.quantity),
         price=Decimal(request.price_per_share),
         transaction_type="buy",
@@ -282,7 +286,7 @@ def buy_stock(user_id: int, request: StockRequest, db: db_dependency):
 
     return response_models.BuyResponse(
         user_id=user_id,
-        stock_symbol=request.stock_symbol,
+        stock_symbol=request.stock_symbol.upper(),
         quantity=request.quantity,
         total_cost=float(total_cost),
         balance=user.balance,
@@ -305,7 +309,7 @@ def sell_stock(user_id: int, request: StockRequest, db: db_dependency):
         db.query(models.Portfolio)
         .filter(
             models.Portfolio.user_id == user.user_id,
-            models.Portfolio.ticker_symbol == request.stock_symbol,
+            models.Portfolio.ticker_symbol == request.stock_symbol.upper(),
         )
         .first()
     )
@@ -331,7 +335,7 @@ def sell_stock(user_id: int, request: StockRequest, db: db_dependency):
 
     transaction = models.Transaction(
         user_id=user_id,
-        ticker_symbol=request.stock_symbol,
+        ticker_symbol=request.stock_symbol.upper(),
         shares_quantity=Decimal(request.quantity),
         price=Decimal(request.price_per_share),
         transaction_type="sell",
@@ -343,7 +347,7 @@ def sell_stock(user_id: int, request: StockRequest, db: db_dependency):
 
     return response_models.SellResponse(
         user_id=user_id,
-        stock_symbol=request.stock_symbol,
+        stock_symbol=request.stock_symbol.upper(),
         quantity=request.quantity,
         total_return=float(total_return),
         balance=user.balance,
@@ -375,3 +379,64 @@ def reset_user(user_id: int, db: db_dependency):
         name=user.name,
         email=user.email,
     )
+
+
+@app.get(
+    "/leaderboard",
+    response_model=response_models.LeaderboardResponse,
+    dependencies=[api_key_dependency],
+)
+def get_leaderBoard(db: db_dependency):
+    leaderboard_entries = (
+        db.query(models.Leaderboard)
+        .order_by(models.Leaderboard.total_worth.desc())
+        .all()
+    )
+
+    leaderboard_list = [
+        response_models.LeaderboardAdditionResponse(
+            name=item.name, total_worth=item.total_worth
+        )
+        for item in leaderboard_entries
+    ]
+
+    return response_models.LeaderboardResponse(leaderboard=leaderboard_list)
+
+
+@app.post(
+    "/leaderboard/{user_id}",
+    response_model=response_models.LeaderboardAdditionResponse,
+    dependencies=[api_key_dependency],
+)
+def update_leaderboard(user_id: int, request: LeaderboardRequest, db: db_dependency):
+    user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="404 Not Found: User not found")
+
+    user_leaderboard = (
+        db.query(models.Leaderboard)
+        .filter(models.Leaderboard.user_id == user_id)
+        .first()
+    )
+
+    if user_leaderboard:
+        user_leaderboard.total_worth = request.total_worth
+
+        db.commit()
+        db.refresh(user_leaderboard)
+
+        return response_models.LeaderboardAdditionResponse(
+            name=user.name, total_worth=user_leaderboard.total_worth
+        )
+    else:
+        new_leaderboard = models.Leaderboard(
+            user_id=user_id, name=user.name, total_worth=request.total_worth
+        )
+
+        db.add(new_leaderboard)
+        db.commit()
+        db.refresh(new_leaderboard)
+
+        return response_models.LeaderboardAdditionResponse(
+            name=user.name, total_worth=new_leaderboard.total_worth
+        )

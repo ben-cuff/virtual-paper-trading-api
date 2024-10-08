@@ -17,8 +17,13 @@ class User(Base):
     portfolio = relationship(
         "Portfolio", back_populates="user", cascade="all, delete-orphan"
     )
-    transactions = relationship(
+
+    transaction = relationship(
         "Transaction", back_populates="user", cascade="all, delete-orphan"
+    )
+
+    leaderboard = relationship(
+        "Leaderboard", back_populates="user", cascade="all, delete-orphan"
     )
 
 
@@ -28,8 +33,8 @@ class Portfolio(Base):
     portfolio_id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("user.user_id"))
     ticker_symbol = Column(String(10))
-    shares_owned = Column(DECIMAL(10, 2))
-    average_price = Column(DECIMAL(10, 2))
+    shares_owned = Column(DECIMAL(12, 3))
+    average_price = Column(DECIMAL(12, 3))
     last_transaction = Column(TIMESTAMP, server_default=func.now())
 
     user = relationship("User", back_populates="portfolio")
@@ -42,8 +47,19 @@ class Transaction(Base):
     user_id = Column(Integer, ForeignKey("user.user_id"))
     ticker_symbol = Column(String(10))
     transaction_type = Column(String(10))
-    shares_quantity = Column(DECIMAL(10, 2))
-    price = Column(DECIMAL(10, 2))
+    shares_quantity = Column(DECIMAL(12, 3))
+    price = Column(DECIMAL(12, 3))
     time = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
 
-    user = relationship("User", back_populates="transactions")
+    user = relationship("User", back_populates="transaction")
+
+
+class Leaderboard(Base):
+    __tablename__ = "leaderboard"
+
+    leaderboard_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.user_id"))
+    name = Column(String(10))
+    total_worth = Column(DECIMAL(12, 3))
+
+    user = relationship("User", back_populates="leaderboard")
