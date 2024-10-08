@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, Request, Header
+from fastapi import FastAPI, HTTPException, Depends, Header
 from starlette.responses import RedirectResponse
 from pydantic import BaseModel
 import app.models as models
