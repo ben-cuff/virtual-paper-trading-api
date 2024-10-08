@@ -11,7 +11,6 @@ from decimal import Decimal
 import os
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
-from mangum import Mangum
 
 
 load_dotenv(dotenv_path=".env.local")
@@ -441,6 +440,3 @@ def update_leaderboard(user_id: int, request: LeaderboardRequest, db: db_depende
         return response_models.LeaderboardAdditionResponse(
             name=user.name, total_worth=new_leaderboard.total_worth
         )
-
-
-handler = Mangum(app)
