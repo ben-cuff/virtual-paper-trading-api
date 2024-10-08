@@ -78,7 +78,7 @@ api_key_dependency = Depends(verify_api_key)
 
 @app.get("/")
 def read_root():
-    return RedirectResponse(url="/docs")
+    return {"Hello": "World"}
 
 
 @app.get(
