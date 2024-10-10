@@ -211,9 +211,9 @@ def get_transactions(user_id: int, db: db_dependency):
         response_models.TransactionResponse(
             stock_symbol=item.ticker_symbol,
             transaction_type=item.transaction_type,
-            shares_quantity=float(item.shares_owned),
+            shares_quantity=float(item.shares_quantity),
             price=float(item.price),
-            time=item.time,
+            time=item.time.isoformat(),
         )
         for item in transactions
     ]
