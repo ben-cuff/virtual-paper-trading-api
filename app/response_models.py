@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 
 class UserResponse(BaseModel):
@@ -8,13 +9,13 @@ class UserResponse(BaseModel):
     balance: float
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class LoginResponse(BaseModel):
     message: str
     success: bool
-    user: UserResponse
+    user: Optional[UserResponse]
 
     class Config:
         from_attributes = True
@@ -31,7 +32,7 @@ class UserPortfolioResponse(BaseModel):
     portfolio: list[PortfolioResponse]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class TransactionResponse(BaseModel):
@@ -42,7 +43,7 @@ class TransactionResponse(BaseModel):
     time: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserTransactionsResponse(BaseModel):
@@ -50,7 +51,7 @@ class UserTransactionsResponse(BaseModel):
     transactions: list[TransactionResponse]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class BuyResponse(BaseModel):
@@ -61,7 +62,7 @@ class BuyResponse(BaseModel):
     balance: float
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class SellResponse(BaseModel):
@@ -72,7 +73,7 @@ class SellResponse(BaseModel):
     balance: float
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ResetResponse(BaseModel):
@@ -82,7 +83,7 @@ class ResetResponse(BaseModel):
     email: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class LeaderboardAdditionResponse(BaseModel):
