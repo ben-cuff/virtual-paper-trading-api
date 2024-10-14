@@ -354,33 +354,6 @@ def sell_stock(user_id: int, request: StockRequest, db: db_dependency):
     )
 
 
-@app.delete(
-    "/reset/{user_id}",
-    response_model=response_models.ResetResponse,
-    dependencies=[api_key_dependency],
-)
-def reset_user(user_id: int, db: db_dependency):
-    user = db.query(models.User).filter(models.User.user_id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="404 Not Found: User not found")
-
-    db.query(models.Portfolio).filter(models.Portfolio.user_id == user_id).delete()
-    db.query(models.Transaction).filter(models.Transaction.user_id == user_id).delete()
-
-    user.balance = 100000.00
-    db.add(user)
-
-    db.commit()
-    db.refresh(user)
-
-    return response_models.ResetResponse(
-        message="User reset successfully",
-        user_id=user_id,
-        name=user.name,
-        email=user.email,
-    )
-
-
 @app.get(
     "/leaderboard",
     response_model=response_models.LeaderboardResponse,
@@ -440,3 +413,55 @@ def update_leaderboard(user_id: int, request: LeaderboardRequest, db: db_depende
         return response_models.LeaderboardAdditionResponse(
             name=user.name, total_worth=new_leaderboard.total_worth
         )
+
+
+@app.delete(
+    "/reset/{user_id}",
+    response_model=response_models.ResetResponse,
+    dependencies=[api_key_dependency],
+)
+def reset_user(user_id: int, db: db_dependency):
+    user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="404 Not Found: User not found")
+
+    db.query(models.Portfolio).filter(models.Portfolio.user_id == user_id).delete()
+    db.query(models.Transaction).filter(models.Transaction.user_id == user_id).delete()
+
+    user.balance = 100000.00
+    db.add(user)
+
+    db.commit()
+    db.refresh(user)
+
+    return response_models.ResetResponse(
+        message="User reset successfully",
+        user_id=user_id,
+        name=user.name,
+        email=user.email,
+    )
+
+
+@app.delete(
+    "/delete/{user_id}",
+    response_model=response_models.ResetResponse,
+    dependencies=[api_key_dependency],
+)
+def reset_user(user_id: int, db: db_dependency):
+    user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="404 Not Found: User not found")
+
+    db.query(models.Portfolio).filter(models.Portfolio.user_id == user_id).delete()
+    db.query(models.Transaction).filter(models.Transaction.user_id == user_id).delete()
+
+    db.delete(user)
+
+    db.commit()
+
+    return response_models.DeleteResponse(
+        message="User deleted successfully",
+        user_id=user_id,
+        name=user.name,
+        email=user.email,
+    )

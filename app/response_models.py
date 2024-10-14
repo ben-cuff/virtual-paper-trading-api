@@ -76,6 +76,21 @@ class SellResponse(BaseModel):
         from_attributes = True
 
 
+class LeaderboardAdditionResponse(BaseModel):
+    name: str
+    total_worth: float
+
+    class Config:
+        from_attributes = True
+
+
+class LeaderboardResponse(BaseModel):
+    leaderboard: list[LeaderboardAdditionResponse]
+
+    class Config:
+        from_attributes = True
+
+
 class ResetResponse(BaseModel):
     message: str
     user_id: int
@@ -86,10 +101,11 @@ class ResetResponse(BaseModel):
         from_attributes = True
 
 
-class LeaderboardAdditionResponse(BaseModel):
+class DeleteResponse(BaseModel):
+    message: str
+    user_id: int
     name: str
-    total_worth: float
+    email: str
 
-
-class LeaderboardResponse(BaseModel):
-    leaderboard: list[LeaderboardAdditionResponse]
+    class Config:
+        from_attributes = True
