@@ -427,6 +427,7 @@ def reset_user(user_id: int, db: db_dependency):
 
     db.query(models.Portfolio).filter(models.Portfolio.user_id == user_id).delete()
     db.query(models.Transaction).filter(models.Transaction.user_id == user_id).delete()
+    db.query(models.Leaderboard).filter(models.Leaderboard.user_id == user_id).delete()
 
     user.balance = 100000.00
     db.add(user)
@@ -454,6 +455,7 @@ def reset_user(user_id: int, db: db_dependency):
 
     db.query(models.Portfolio).filter(models.Portfolio.user_id == user_id).delete()
     db.query(models.Transaction).filter(models.Transaction.user_id == user_id).delete()
+    db.query(models.Leaderboard).filter(models.Leaderboard.user_id == user_id).delete()
 
     db.delete(user)
 
