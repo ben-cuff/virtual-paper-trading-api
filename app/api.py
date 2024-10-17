@@ -399,7 +399,7 @@ def update_leaderboard(user_id: int, request: LeaderboardRequest, db: db_depende
         db.refresh(user_leaderboard)
 
         return response_models.LeaderboardAdditionResponse(
-            name=user.name, total_worth=user_leaderboard.total_worth
+            name=user.name, user_id=user_id, total_worth=user_leaderboard.total_worth
         )
     else:
         new_leaderboard = models.Leaderboard(
