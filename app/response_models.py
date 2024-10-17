@@ -78,6 +78,7 @@ class SellResponse(BaseModel):
 
 class LeaderboardAdditionResponse(BaseModel):
     name: str
+    user_id: int
     total_worth: float
 
     class Config:

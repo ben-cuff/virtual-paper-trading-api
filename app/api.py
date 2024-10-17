@@ -368,7 +368,7 @@ def get_leaderBoard(db: db_dependency):
 
     leaderboard_list = [
         response_models.LeaderboardAdditionResponse(
-            name=item.name, total_worth=item.total_worth
+            name=item.name, user_id=item.user_id, total_worth=item.total_worth
         )
         for item in leaderboard_entries
     ]
