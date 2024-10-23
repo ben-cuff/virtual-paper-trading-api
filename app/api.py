@@ -5,7 +5,7 @@ import app.models as models
 from app.database import engine, SessionLocal
 import app.response_models as response_models
 from sqlalchemy.orm import Session
-from typing import Annotated
+from typing import Annotated, List
 from passlib.context import CryptContext
 from decimal import Decimal
 import os
@@ -79,6 +79,24 @@ api_key_dependency = Depends(verify_api_key)
 @app.get("/")
 def read_root():
     return RedirectResponse(url="/docs")
+
+
+@app.get(
+    "/users/",
+    response_model=List[response_models.UserResponse],
+    dependencies=[api_key_dependency],
+)
+def get_all_users(db: db_dependency):
+    users = db.query(models.User).all()
+    return [
+        response_models.UserResponse(
+            id=user.user_id,
+            name=user.name,
+            email=user.email,
+            balance=user.balance,
+        )
+        for user in users
+    ]
 
 
 @app.get(
