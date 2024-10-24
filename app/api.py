@@ -153,7 +153,6 @@ def create_user(user: UserCreateRequest, db: db_dependency):
 @app.post(
     "/login/",
     response_model=response_models.LoginResponse,
-    dependencies=[api_key_dependency],
 )
 def login(userAttempt: LoginRequest, db: db_dependency):
     user = db.query(models.User).filter(models.User.email == userAttempt.email).first()
