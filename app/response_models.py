@@ -21,6 +21,14 @@ class LoginResponse(BaseModel):
         from_attributes = True
 
 
+class ChangePasswordResponse(BaseModel):
+    message: str
+    success: bool
+
+    class Config:
+        from_attributes = True
+
+
 class PortfolioResponse(BaseModel):
     stock_symbol: str
     shares_owned: float
