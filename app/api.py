@@ -201,10 +201,6 @@ def change_password(
     db.commit()
     db.refresh(user)
 
-    user_dict = response_models.UserResponse(
-        id=user.user_id, name=user.name, email=user.email, balance=user.balance
-    )
-
     return response_models.ChangePasswordResponse(
         message="Password changed successfully", success=True
     )
