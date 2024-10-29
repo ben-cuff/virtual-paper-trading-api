@@ -24,7 +24,6 @@ class LoginResponse(BaseModel):
 class ChangePasswordResponse(BaseModel):
     message: str
     success: bool
-    Optional(UserResponse)
 
     class Config:
         from_attributes = True

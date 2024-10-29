@@ -51,6 +51,11 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class ChangePasswordRequest(BaseModel):
+    old_password: str
+    password: str
+
+
 class LeaderboardRequest(BaseModel):
     total_worth: float
 
@@ -175,6 +180,33 @@ def login(userAttempt: LoginRequest, db: db_dependency):
 
     return response_models.LoginResponse(
         message="User successfully logged in", success=True, user=user_dict
+    )
+
+
+@app.patch("/users/{user_id}", response_model=response_models.ChangePasswordResponse)
+def change_password(
+    user_id: int, db: db_dependency, userAttempt: ChangePasswordRequest
+):
+    user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="404 Not Found: User not found")
+
+    if not pwd_context.verify(userAttempt.old_password, user.hashed_password):
+        return response_models.ChangePasswordResponse(
+            message="Old password incorrect", success=False
+        )
+
+    user.hashed_password = pwd_context.hash(userAttempt.password)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    user_dict = response_models.UserResponse(
+        id=user.user_id, name=user.name, email=user.email, balance=user.balance
+    )
+
+    return response_models.ChangePasswordResponse(
+        message="Password changed successfully", success=True
     )
 
 
