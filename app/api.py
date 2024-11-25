@@ -495,7 +495,7 @@ def reset_user(user_id: int, db: db_dependency):
     response_model=response_models.ResetResponse,
     dependencies=[api_key_dependency],
 )
-def reset_user(user_id: int, db: db_dependency):
+def delete_user(user_id: int, db: db_dependency):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="404 Not Found: User not found")
